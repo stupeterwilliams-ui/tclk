@@ -427,6 +427,33 @@ describe("tclk PTLC path (adaptor cycle)", () => {
     expect(claimed.ok).toBe(true);
     expect(claimed.state.status).toBe("claimed");
   });
+
+  it("applyFrame stores presig without verifying it — the check belongs to the payee (SPEC 3.3)", () => {
+    // The claim message a pre-signature commits to is rail-defined and appears in no frame, so
+    // transcript replay cannot verify one and does not try. A structurally valid but meaningless
+    // presig therefore advances the contract; the payee is what stops a bad one, by declining to
+    // reveal. Pinned so the next reader does not mistake "stored" for "checked", and so adding a
+    // verification here becomes a deliberate change rather than an accident.
+    const payerKey = schnorrAdaptor.getPublicKey("0x" + "11".repeat(32))!;
+    const payeeKey = schnorrAdaptor.getPublicKey("0x" + "22".repeat(32))!;
+    const offer = baseOffer({ lock: "point", paymentKey: payerKey });
+    const ptlc = generatePointLock();
+    const accept = makeAccept(offer, { from: PAYEE_DID, statement: ptlc.statement, paymentKey: payeeKey });
+    const state = applyFrame(openContract(offer), accept, T0).state;
+
+    const garbage = { nonce: "0x02" + "00".repeat(32), s: "0x" + "ff".repeat(32) };
+    const locked = applyFrame(state, {
+      type: "lock", from: PAYER_DID, contract: state.contract!, rail: "x402",
+      ref: "escrow-7", presig: garbage,
+    }, T0);
+
+    expect(locked.ok).toBe(true);
+    expect(locked.state.status).toBe("locked");
+    expect(locked.state.presig).toEqual(garbage);
+    // And it is meaningless: the payee's own check is what refuses it.
+    expect(schnorrAdaptor.verifyPreSignature(payerKey, "0x" + "cd".repeat(32), ptlc.statement, garbage))
+      .toBe(false);
+  });
 });
 
 describe("tclk MemoryRail (reference rail predicates)", () => {

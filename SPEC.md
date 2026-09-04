@@ -190,8 +190,19 @@ the rail (`verifyLock`). Selection is set membership, independent of the order i
 party advertises supported rails. For PTLC rails that settle by signature, `presig` carries the
 payer's Schnorr adaptor pre-signature `{nonce, s}` under the statement `Y` over the rail's claim
 message: the payee completes it with `y` (`adapt`), and the completed signature both settles the
-rail and — by `extractWitness` — hands `y` to anyone holding the pre-signature. Verifying it is
-`verifyPreSignature` against the payer's `paymentKey`.
+rail and — by `extractWitness` — hands `y` to anyone holding the pre-signature.
+
+**Who verifies it, and against what.** `verifyPreSignature(payerKey, claimMsg, statement, presig)`
+is evaluated by the **payee**, before it adapts or reveals, against the claim message the *named
+rail* defines — a transaction sighash, an escrow release message, whatever that rail settles on.
+It is not evaluated during transcript replay and cannot be: no frame carries `claimMsg`, because
+the room is rail-agnostic by design and a generic auditor has no way to know the settlement
+transaction. `applyFrame` therefore validates only the wire shape of `presig` (§3.3's `nonce` and
+`s` forms) and stores it; a structurally valid but cryptographically meaningless pre-signature
+advances the contract to `locked`. That is not a gap in the state machine — money moves on the
+rail, and the payee simply declines to reveal `y` against a pre-signature that does not verify,
+letting the contract refund. Tooling that needs the check exposes it directly, taking the claim
+message from the caller (`tclk_adaptor_verify`).
 
 ### 3.4 `reveal`
 
