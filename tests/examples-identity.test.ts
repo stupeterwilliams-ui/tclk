@@ -34,9 +34,19 @@ function run(env: Record<string, string> = {}) {
   return { status: r.status, out: `${r.stdout ?? ""}${r.stderr ?? ""}` };
 }
 
-const built = existsSync(new URL("../dist/index.js", import.meta.url));
+describe("examples/live-deal.mjs identity provenance", () => {
+  // Fails rather than skips when the package is not built. The example imports `dist/`, so
+  // without it these tests cannot run — and a suite that quietly reports five skips as success
+  // is the failure mode this file exists to prevent, one level up. CI builds before it tests
+  // (CONTRIBUTING, "CI runs exactly these three"), so this only ever fires locally, where the
+  // fix is one command and a silent pass would be a lie.
+  it("requires the package to be built", () => {
+    expect(
+      existsSync(new URL("../dist/index.js", import.meta.url)),
+      "run `pnpm build` first: examples/live-deal.mjs imports dist/",
+    ).toBe(true);
+  });
 
-describe.skipIf(!built)("examples/live-deal.mjs identity provenance", () => {
   it("labels both sides ephemeral and warns, when no seed is configured", () => {
     const { out } = run();
     expect(out).toContain("(ephemeral — one-run key)");
