@@ -6,6 +6,13 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `SPEC.md` §9 now names FLOP's yellow paper §10 as the document the future FLOP-network rail
+  binding satisfies, and says which of its requirements land on the rail adapter rather than on
+  tclk/1. The scope was already stated; the external document it points at was not, so its
+  absence read as an oversight.
+
 ### Fixed
 
 - `tclk_post_frame` now accepts exact decimal-string nonces in addition to safe integer

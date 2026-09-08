@@ -462,7 +462,15 @@ among several rather than the only ones available.
 ## 9. What is deliberately not here (yet)
 
 - No FLOP-network rail binding (comes later; the interface and encodings are already
-  compatible), no multi-hop route construction over rooms (single contract per room today; the
+  compatible). Concretely, that binding is what FLOP's yellow paper §10 specifies, and its
+  requirements land on the rail adapter rather than on tclk/1: **R10.2**'s timelock margin is a
+  relationship between a rail's own `T_lock` and these deadlines, which only a rail that has a
+  `T_lock` can check — `validateDeadlines` deliberately supplies no universal default — and
+  **R10.5**'s "lock an estimated max, settle the actual at redemption" has no tclk/1 shape at
+  all, since `amount` is fixed on the offer and `contractId` commits to the offer wholesale. Both
+  are noted here because the absence of any reference to that document reads as an oversight
+  rather than as scope, and because a variable-settlement shape is a tclk/2 question (#57) rather
+  than a patch. No multi-hop route construction over rooms (single contract per room today; the
   AMHL witness algebra plugs in above these primitives when routing lands), no k-of-n secret
   sharing (§8.4 says why, and §8.1–8.3 are what to use meanwhile), no reputation or spend
   accounting (receipts
