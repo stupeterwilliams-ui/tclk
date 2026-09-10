@@ -12,6 +12,13 @@ All notable changes to this project are documented here. Format follows
   binding satisfies, and says which of its requirements land on the rail adapter rather than on
   tclk/1. The scope was already stated; the external document it points at was not, so its
   absence read as an oversight.
+- `SPEC.md` §5 no longer describes the `flop-htlc` escrow as carrying a `Point(Y)` policy leaf.
+  The yellow paper's §10 specifies a hash-and-timeout lock and nothing else, and its §6.1
+  predicate list is sig, hash, timelock and threshold, so the hash encoding is byte-identical as
+  claimed and the point encoding matches nothing published. It is now stated as the encoding this
+  library would use if such a leaf lands rather than as a compatibility claim, and the rail
+  registry row and §9 say the same. Naming the source document in §9 is what made the claim
+  checkable; @Qwealzy checked it.
 
 ### Fixed
 

@@ -270,7 +270,7 @@ Rail IDs are protocol identifiers, not display labels. New emissions use this cl
 |---|---|---|---|---|---|
 | `btc-htlc` | Bitcoin Script/Taproot | fund an output bound to the statement and timeout | spend with the preimage or completed adaptor signature | take the timeout spend | yes |
 | `evm-htlc` | EVM escrow contract | deposit under the statement and deadline | release with the preimage/witness | execute the expired refund path | yes |
-| `flop-htlc` | FLOP typed escrow | create an escrow with the matching hash/point and time policy | satisfy the hash/point release leaf | satisfy its refund-time leaf | yes |
+| `flop-htlc` | FLOP typed escrow | create an escrow with the matching hash and time policy | satisfy the hash release leaf | satisfy its refund-time leaf | yes |
 | `memory` | process-local reference implementation | record `LockTerms` in memory | verify the secret and mark claimed | check the supplied clock and mark refunded | no durable or external value |
 | `near-htlc` | NEAR escrow contract | deposit under the statement and deadline | release with the preimage/witness | execute the expired refund path | yes |
 | `paper` | technocore CAS note | write a rehearsal record containing the terms | verify the secret and CAS the record to claimed | CAS an expired record to refunded | **no** |
@@ -314,11 +314,15 @@ the lock/claim/refund predicates in-process — it is the executable spec of wha
 enforce and what the tests drive end-to-end. Real rails to bind later, none required by this
 layer:
 
-- **`flop-htlc`** — the FLOP network's on-chain typed escrow, opened with an
-  `And[Hash(h), Before(T)]` or `Point(Y)` policy leaf. The statement encodings here are chosen to
-  be byte-identical to that escrow's: a 32-byte sha256 digest for `Hash`, a 33-byte
-  SEC1-compressed point for `Point`. Block deadlines derive from the ms deadlines with a
-  timelock-symmetry margin.
+- **`flop-htlc`** — the FLOP network's on-chain typed escrow, whose published specification is
+  the yellow paper's §10 (§9). Its lock is a hash-and-timeout leaf — R10.1 fixes `H = SHA256(s)`,
+  redeemable by `s` before `T_lock` — and the 32-byte sha256 digest encoded here for `Hash` is
+  byte-identical to it. The point half has no counterpart in that document: §10 states no point
+  or discrete-log condition, and §6.1's declarative spend-condition layer lists its predicates as
+  sig, hash, timelock and threshold. The 33-byte SEC1-compressed point encoded here for `Point`
+  is therefore the encoding this library would use if such a leaf lands, not a statement that one
+  exists today. Block deadlines derive from the ms deadlines with a timelock-symmetry margin,
+  which is R10.2's requirement on the adapter.
 - **`x402`** — the lock statement rides the existing `X-Payment-Hash-Lock` /
   `X-Payment-Timeout-Blocks` headers; `ref` is the payment id.
 - **`evm-htlc` / `near-htlc` / BTC** — counterparty escrow contracts on other chains: an EVM
@@ -461,9 +465,11 @@ among several rather than the only ones available.
 
 ## 9. What is deliberately not here (yet)
 
-- No FLOP-network rail binding (comes later; the interface and encodings are already
-  compatible). Concretely, that binding is what FLOP's yellow paper §10 specifies, and its
-  requirements land on the rail adapter rather than on tclk/1: **R10.2**'s timelock margin is a
+- No FLOP-network rail binding (comes later; the hash-lock interface and encodings are already
+  compatible, and §5 says where that stops — the point half this library encodes has no
+  counterpart in the document below). Concretely, that binding is what FLOP's yellow paper §10
+  specifies, and its requirements land on the rail adapter rather than on tclk/1: **R10.2**'s
+  timelock margin is a
   relationship between a rail's own `T_lock` and these deadlines, which only a rail that has a
   `T_lock` can check — `validateDeadlines` deliberately supplies no universal default — and
   **R10.5**'s "lock an estimated max, settle the actual at redemption" has no tclk/1 shape at
