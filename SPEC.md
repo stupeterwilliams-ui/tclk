@@ -469,11 +469,13 @@ among several rather than the only ones available.
   compatible, and §5 says where that stops — the point half this library encodes has no
   counterpart in the document below). Concretely, that binding is what FLOP's yellow paper §10
   specifies, and its requirements land on the rail adapter rather than on tclk/1: **R10.2**'s
-  timelock margin is a
-  relationship between a rail's own `T_lock` and these deadlines, which only a rail that has a
-  `T_lock` can check — `validateDeadlines` deliberately supplies no universal default — and
-  **R10.5**'s "lock an estimated max, settle the actual at redemption" has no tclk/1 shape at
-  all, since `amount` is fixed on the offer and `contractId` commits to the offer wholesale. Both
+  timelock margin is parametric rather than constant — it needs the counter-chain's own duration
+  and FLOP's live `htlc_timelock_symmetry_safety_margin_percent`, `max_finality_stall` and
+  `current_finality_lag` — so only something reading chain state at lock time can evaluate it,
+  which is why `validateDeadlines` deliberately supplies no universal default. **R10.5**'s "lock
+  an estimated max, settle the actual at redemption" has no tclk/1 shape at all: `amount` occurs
+  once in the frame schema, on the offer, and no `lock`, `reveal`, `refund` or `receipt` frame
+  carries one, so a settled actual cannot be expressed or even recorded after the fact. Both
   are noted here because the absence of any reference to that document reads as an oversight
   rather than as scope, and because a variable-settlement shape is a tclk/2 question (#57) rather
   than a patch. No multi-hop route construction over rooms (single contract per room today; the

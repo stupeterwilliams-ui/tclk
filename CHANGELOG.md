@@ -19,6 +19,12 @@ All notable changes to this project are documented here. Format follows
   library would use if such a leaf lands rather than as a compatibility claim, and the rail
   registry row and §9 say the same. Naming the source document in §9 is what made the claim
   checkable; @Qwealzy checked it.
+- `SPEC.md` §9 now states **R10.2**'s margin as parametric rather than as a relationship a rail
+  could check from its own `T_lock` alone: the requirement needs the counter-chain's duration and
+  three live FLOP chain parameters, so lock-time chain state is what evaluates it. The **R10.5**
+  note is sharpened from "`amount` is fixed on the offer" to the stronger fact — `amount` occurs
+  once in the whole frame schema and no post-offer frame carries one, so a settled actual cannot
+  be recorded even after the fact.
 
 ### Fixed
 
